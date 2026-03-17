@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #ffffff;    /* Pure White for the clean backgrounds */
+  --color-brand-secondary: #f8f8f8;  /* Off-white for slight separation */
+  --color-brand-dark: #000000;       /* Solid Black for primary text and dark backgrounds */
+  --color-brand-muted: #6b6b6b;      /* Muted gray for readable secondary text */
+  --color-brand-accent: #111111;     /* Near Black for slight contrast where needed */
+  
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif), ui-serif, Georgia, Cambria, serif;
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+:root {
+  --background: var(--color-brand-primary);
+  --foreground: var(--color-brand-dark);
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: var(--background);
+  color: var(--foreground);
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+}
+
+/* Simple Micro-animations */
+.fade-in {
+  animation: fadeIn 0.8s ease-in-out forwards;
+  opacity: 0;
+}
+
+.slide-up {
+  animation: slideUp 0.8s ease-out forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
