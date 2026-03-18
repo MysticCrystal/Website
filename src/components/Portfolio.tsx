@@ -166,10 +166,10 @@ export default function Portfolio({ videoUrl }: Props) {
           <span className="text-[10px] font-sans tracking-[0.3em] uppercase text-neutral-400 font-semibold mb-4 ml-[0.3em]">
             Portfolio
           </span>
-          <h2 className="text-3xl md:text-5xl font-sans font-thin text-black leading-snug tracking-[0.4em] uppercase ml-[0.4em]">
-            Video Tours
-            <br />
-            <span className="text-neutral-500">And Visual Storytelling</span>
+          <h2 className="text-[clamp(2.2rem,9vw,4.5rem)] font-sans font-thin text-black leading-[1.06] uppercase tracking-[0.16em] sm:tracking-[0.24em] md:tracking-[0.34em] ml-[0.16em] sm:ml-[0.24em] md:ml-[0.34em]">
+            <span className="block">Video Tours</span>
+            <span className="block text-neutral-500">And Visual</span>
+            <span className="block text-neutral-500">Storytelling</span>
           </h2>
           <div className="w-12 h-px bg-black/80 my-10"></div>
           <p className="text-neutral-600 font-light text-lg leading-relaxed max-w-xl">
