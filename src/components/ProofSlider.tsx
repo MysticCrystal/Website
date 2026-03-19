@@ -5,26 +5,27 @@ import { useEffect, useState } from 'react';
 export default function ProofSlider({ stats }: { stats: { number: string; text: string }[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const statCount = stats?.length ?? 0;
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % stats.length);
+    setCurrentIndex((prev) => (prev + 1) % statCount);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + stats.length) % stats.length);
+    setCurrentIndex((prev) => (prev - 1 + statCount) % statCount);
   };
 
-  if (!stats || stats.length === 0) return null;
-
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || statCount === 0) return;
 
     const interval = window.setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % stats.length);
+      setCurrentIndex((prev) => (prev + 1) % statCount);
     }, 5000);
 
     return () => window.clearInterval(interval);
-  }, [isPaused, stats.length]);
+  }, [isPaused, statCount]);
+
+  if (statCount === 0) return null;
 
   return (
     <section id="achievements" className="w-full py-24 bg-white border-t border-neutral-100 flex justify-center overflow-hidden">

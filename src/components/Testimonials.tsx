@@ -20,7 +20,7 @@ export default function Testimonials() {
       location: ""
     },
     {
-      quote: "I worked with Lane Banner to sell my rental property single family home in Winston Salem... The entire experience from start to finish was pleasant and extremely easy... After listing the property and having several buyers visit right away, Lane called me on the first day with an offer for the exact price we listed it for.",
+      quote: "I worked with Lane Banner to sell my rental property single family home in Winston-Salem... The entire experience from start to finish was pleasant and extremely easy... After listing the property and having several buyers visit right away, Lane called me on the first day with an offer for the exact price we listed it for.",
       name: "Peter Perlegas",
       location: "Winston-Salem"
     },
@@ -30,7 +30,7 @@ export default function Testimonials() {
       location: "Out-of-State Buyer"
     },
     {
-      quote: "If you want results, efficiency and top-notch representation for your home sell or search... Lane Banner of Banner Real Estate is the best!! We couldn’t have picked a better realtor.",
+      quote: "If you want results, efficiency and top-notch representation for your home sell or search... Lane Banner of Banner Real Estate is the best!! We couldn't have picked a better realtor.",
       name: "TK Fraz",
       location: ""
     }
@@ -66,14 +66,14 @@ export default function Testimonials() {
             <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
           </svg>
         </div>
-        
+
         <div className="relative min-h-[280px] md:min-h-[200px] flex flex-col items-center justify-center fade-in">
           <blockquote className="text-xl md:text-3xl font-sans font-light text-brand-dark leading-relaxed mb-10 w-full transition-opacity duration-500">
             &quot;{testimonials[currentIndex].quote}&quot;
           </blockquote>
-          
+
           <cite className="block text-brand-muted font-sans uppercase tracking-[0.1em] text-sm not-italic">
-            — {testimonials[currentIndex].name}
+            &mdash; {testimonials[currentIndex].name}
             {testimonials[currentIndex].location && (
               <>
                 , <span className="text-brand-dark">{testimonials[currentIndex].location}</span>
@@ -82,9 +82,8 @@ export default function Testimonials() {
           </cite>
         </div>
 
-        {/* Controls */}
         <div className="flex justify-center gap-6 mt-12">
-          <button 
+          <button
             onClick={prevSlide}
             className="p-3 rounded-full border border-neutral-300 hover:border-black hover:bg-black hover:text-white transition-all duration-300 text-neutral-400"
             aria-label="Previous testimonial"
@@ -93,11 +92,11 @@ export default function Testimonials() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </button>
-          
+
           <div className="flex items-center gap-2">
             {testimonials.map((_, idx) => (
-              <button 
-                key={idx} 
+              <button
+                key={idx}
                 onClick={() => setCurrentIndex(idx)}
                 aria-label={`Go to slide ${idx + 1}`}
                 className={`h-1.5 transition-all duration-500 rounded-full ${idx === currentIndex ? 'w-6 bg-black' : 'w-2 bg-neutral-300 hover:bg-neutral-400'}`}
@@ -119,8 +118,8 @@ export default function Testimonials() {
               </svg>
             )}
           </button>
-          
-          <button 
+
+          <button
             onClick={nextSlide}
             className="p-3 rounded-full border border-neutral-300 hover:border-black hover:bg-black hover:text-white transition-all duration-300 text-neutral-400"
             aria-label="Next testimonial"
@@ -145,7 +144,6 @@ export default function Testimonials() {
             Google Reviews
           </a>
         </div>
-
       </div>
     </section>
   );

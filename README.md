@@ -45,11 +45,23 @@ Create a `.env.local` (not committed) with:
 GOOGLE_SHEET_ID=...
 GOOGLE_CLIENT_EMAIL=...
 GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 ```
 
 Notes:
 - The Sheet ID is the long ID in the spreadsheet URL between `/d/` and `/edit`.
 - If your private key is stored with literal `\n` characters (common in Vercel env vars), the server route normalizes it automatically.
+- `SLACK_WEBHOOK_URL` is optional. If present, the server sends a lead notification to Slack after the Google Sheets write succeeds.
+
+## Google Sheets Email Alerts
+
+This project now relies on a Google Sheets Apps Script trigger for email notifications after a lead is appended to the `Leads` sheet.
+
+Recommended setup:
+
+- Bind an Apps Script to the lead sheet
+- Add a time-driven trigger for `checkForNewLeads`
+- Run it every 1-2 minutes for near-immediate inbox alerts
 
 ## Learn More
 

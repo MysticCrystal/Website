@@ -21,7 +21,7 @@ export default function BrandIntro() {
               Today, I combine that local knowledge with the global reach of Forbes Global Properties helping clients position their homes effectively and make confident decisions in an ever-changing market.
             </p>
             <p>
-              My approach is simple: thoughtful strategy, clear communication, and dependable execution from start to finish.
+              My approach is simple: thoughtful strategy, clear communication, and reliable execution from start to finish.
             </p>
           </div>
           
@@ -29,12 +29,12 @@ export default function BrandIntro() {
 
         {/* Image & CTA Column */}
         <div className="flex flex-col items-center slide-up pt-4 md:pt-0">
-          <div className="relative w-full aspect-[4/5] bg-neutral-100 overflow-hidden shadow-lg group mb-8">
+          <div className="relative w-full max-w-[34rem] aspect-square overflow-hidden group mb-8">
                <Image 
-                 src="/profile-optimized.jpg" 
+                 src="/profile-portrait-20260319b.png" 
                  alt="Lane Banner Profile" 
                  fill 
-                 className="object-cover object-center transition-transform duration-700 group-hover:scale-105" 
+                 className="object-contain object-center transition-transform duration-700 group-hover:scale-[1.02]" 
                />
           </div>
           <a 

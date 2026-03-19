@@ -2,11 +2,11 @@ import Image from 'next/image';
 
 export default function Hero() {
   return (
-    <section className="relative w-full h-[90vh] flex flex-col items-center justify-center overflow-hidden bg-black">
+    <section className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden bg-black">
       {/* Static Background Image */}
       <div className="absolute inset-0 z-0">
         <Image 
-          src="/hero-optimized.jpg" 
+          src="/hero-optimized.png" 
           alt="Luxury Real Estate Front Elevation" 
           fill 
           priority 
@@ -24,7 +24,7 @@ export default function Hero() {
           LANE BANNER
         </h1>
         <p className="text-lg md:text-xl text-brand-secondary font-sans font-light mb-12 max-w-2xl drop-shadow-sm slide-up leading-relaxed" style={{ animationDelay: '0.2s' }}>
-          Helping clients buy and sell homes in Winston-Salem and the Triad with clarity, strategy, and trusted execution
+          Winston-Salem Real Estate, Handled Properly
         </p>
         
         <div className="flex justify-center slide-up w-full sm:w-auto" style={{ animationDelay: '0.4s' }}>

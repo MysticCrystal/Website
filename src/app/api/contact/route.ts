@@ -15,19 +15,28 @@ type ContactPayload = {
 function mustGetEnv(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Missing required env var: ${name}`);
-  return value;
+  return normalizeEnvValue(value);
+}
+
+function normalizeEnvValue(raw: string): string {
+  const normalized = raw.trim();
+  if (
+    (normalized.startsWith('"') && normalized.endsWith('"')) ||
+    (normalized.startsWith("'") && normalized.endsWith("'"))
+  ) {
+    return normalized.slice(1, -1);
+  }
+
+  return normalized;
 }
 
 function normalizePrivateKey(raw: string): string {
   // Vercel often stores multiline secrets with literal "\n".
-  return raw.replace(/\\n/g, "\n");
+  return normalizeEnvValue(raw).replace(/\\n/g, "\n");
 }
 
-function getClientIp(headers: Headers): string {
-  // Best-effort. Exact behavior depends on hosting (Vercel, etc.).
-  const forwardedFor = headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0]?.trim() || "";
-  return headers.get("x-real-ip") ?? "";
+function getOptionalEnv(name: string): string {
+  return normalizeEnvValue(process.env[name] ?? "");
 }
 
 function isValidEmail(email: string): boolean {
@@ -39,6 +48,39 @@ function asA1SheetRange(sheetTitle: string, a1: string): string {
   // Always quote the sheet title to handle spaces/punctuation safely.
   const escaped = sheetTitle.replace(/'/g, "''");
   return `'${escaped}'!${a1}`;
+}
+
+async function sendSlackNotification(webhookUrl: string, payload: ContactPayload, submittedAt: string) {
+  const lines = [
+    "*New website lead*",
+    `*Submitted:* ${submittedAt}`,
+    `*Name:* ${payload.firstName} ${payload.lastName}`,
+    `*Email:* ${payload.email}`,
+    `*Phone:* ${payload.phone?.trim() || "Not provided"}`,
+    `*Looking to:* ${payload.intent}`,
+  ];
+
+  const message = payload.message?.trim();
+  if (message) {
+    lines.push(`*Message:* ${message}`);
+  }
+
+  const response = await fetch(webhookUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      username: "Lane Banner Leads",
+      icon_emoji: ":house_with_garden:",
+      text: lines.join("\n"),
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(body || `Slack webhook failed with status ${response.status}`);
+  }
 }
 
 export async function POST(req: Request) {
@@ -92,8 +134,8 @@ export async function POST(req: Request) {
       insertDataOption: "INSERT_ROWS",
       requestBody: { values },
     });
-  } catch (err: any) {
-    const message = typeof err?.message === "string" ? err.message : "Failed to append row";
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to append row";
 
     // If the tab name is wrong, fall back to the first sheet title and retry once.
     if (message.includes("Unable to parse range")) {
@@ -118,6 +160,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 
-  // Optional: you can also return normalized data if you want for client display.
+  const slackWebhookUrl = getOptionalEnv("SLACK_WEBHOOK_URL");
+  if (slackWebhookUrl) {
+    try {
+      await sendSlackNotification(slackWebhookUrl, { firstName, lastName, email, phone, intent, message }, submittedAt);
+    } catch (err) {
+      console.error("Slack notification failed", err);
+    }
+  }
+
   return NextResponse.json({ success: true });
 }

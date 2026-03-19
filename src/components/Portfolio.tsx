@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 type Props = {
   videoUrl: string;
@@ -9,6 +9,43 @@ type Props = {
 type YouTubeTarget =
   | { kind: "video"; id: string }
   | { kind: "playlist"; id: string };
+
+type YTPlayer = {
+  nextVideo: () => void;
+  previousVideo: () => void;
+  playVideo: () => void;
+  destroy: () => void;
+};
+
+type YouTubePlayerVars = {
+  autoplay: number;
+  playsinline: number;
+  rel: number;
+  modestbranding: number;
+  vq: string;
+  listType?: "playlist";
+  list?: string;
+};
+
+type YTPlayerOptions = {
+  height: string;
+  width: string;
+  host: string;
+  videoId?: string;
+  playerVars: YouTubePlayerVars;
+  events: {
+    onReady: () => void;
+  };
+};
+
+type YouTubeWindow = Window &
+  typeof globalThis & {
+    YT?: {
+      Player: new (containerId: string, options: YTPlayerOptions) => YTPlayer;
+    };
+    __ytApiLoading?: Promise<void>;
+    onYouTubeIframeAPIReady?: () => void;
+  };
 
 function extractYouTubeTarget(input: string): YouTubeTarget | null {
   try {
@@ -22,15 +59,13 @@ function extractYouTubeTarget(input: string): YouTubeTarget | null {
     const host = url.hostname.replace(/^www\./, "");
     if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
       const list = url.searchParams.get("list");
-      // Prefer playlist if present.
       if (list) return { kind: "playlist", id: list };
 
       const v = url.searchParams.get("v");
       if (v) return { kind: "video", id: v };
 
-      // /shorts/:id or /embed/:id
       const parts = url.pathname.split("/").filter(Boolean);
-      const idx = parts.findIndex((p) => p === "shorts" || p === "embed");
+      const idx = parts.findIndex((part) => part === "shorts" || part === "embed");
       if (idx >= 0 && parts[idx + 1]) return { kind: "video", id: parts[idx + 1] };
     }
   } catch {
@@ -40,25 +75,18 @@ function extractYouTubeTarget(input: string): YouTubeTarget | null {
   return null;
 }
 
-type YTPlayer = {
-  nextVideo: () => void;
-  previousVideo: () => void;
-  playVideo: () => void;
-  destroy: () => void;
-};
-
 function ensureYouTubeIframeApiLoaded(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
-  const w = window as any;
-  if (w.YT?.Player) return Promise.resolve();
+  const win = window as YouTubeWindow;
+  if (win.YT?.Player) return Promise.resolve();
 
-  if (w.__ytApiLoading) return w.__ytApiLoading as Promise<void>;
+  if (win.__ytApiLoading) return win.__ytApiLoading;
 
-  w.__ytApiLoading = new Promise<void>((resolve) => {
+  win.__ytApiLoading = new Promise<void>((resolve) => {
     const existing = document.querySelector<HTMLScriptElement>('script[data-yt-iframe-api="true"]');
     if (existing) {
       const check = () => {
-        if (w.YT?.Player) resolve();
+        if (win.YT?.Player) resolve();
         else setTimeout(check, 50);
       };
       check();
@@ -70,10 +98,10 @@ function ensureYouTubeIframeApiLoaded(): Promise<void> {
     script.async = true;
     script.dataset.ytIframeApi = "true";
 
-    const prior = w.onYouTubeIframeAPIReady;
-    w.onYouTubeIframeAPIReady = () => {
+    const prior = win.onYouTubeIframeAPIReady;
+    win.onYouTubeIframeAPIReady = () => {
       try {
-        if (typeof prior === "function") prior();
+        prior?.();
       } finally {
         resolve();
       }
@@ -82,7 +110,7 @@ function ensureYouTubeIframeApiLoaded(): Promise<void> {
     document.head.appendChild(script);
   });
 
-  return w.__ytApiLoading as Promise<void>;
+  return win.__ytApiLoading;
 }
 
 export default function Portfolio({ videoUrl }: Props) {
@@ -100,10 +128,9 @@ export default function Portfolio({ videoUrl }: Props) {
       await ensureYouTubeIframeApiLoaded();
       if (cancelled) return;
 
-      const w = window as any;
-      if (!w.YT?.Player) return;
+      const win = window as YouTubeWindow;
+      if (!win.YT?.Player) return;
 
-      // Destroy previous instance if any.
       if (playerRef.current) {
         try {
           playerRef.current.destroy();
@@ -115,33 +142,43 @@ export default function Portfolio({ videoUrl }: Props) {
 
       setPlayerReady(false);
 
-      const playerVars: Record<string, any> = {
+      const playerVars: YouTubePlayerVars = {
         autoplay: 0,
         playsinline: 1,
         rel: 0,
         modestbranding: 1,
-        vq: "hd2160", // best-effort quality hint; YouTube ultimately decides
+        vq: "hd2160",
       };
 
-      const config =
+      const options: YTPlayerOptions =
         target.kind === "playlist"
-          ? { playerVars: { ...playerVars, listType: "playlist", list: target.id } }
-          : { videoId: target.id, playerVars };
+          ? {
+              height: "100%",
+              width: "100%",
+              host: "https://www.youtube-nocookie.com",
+              playerVars: { ...playerVars, listType: "playlist", list: target.id },
+              events: {
+                onReady: () => {
+                  if (cancelled) return;
+                  setPlayerReady(true);
+                },
+              },
+            }
+          : {
+              height: "100%",
+              width: "100%",
+              host: "https://www.youtube-nocookie.com",
+              videoId: target.id,
+              playerVars,
+              events: {
+                onReady: () => {
+                  if (cancelled) return;
+                  setPlayerReady(true);
+                },
+              },
+            };
 
-      const player = new w.YT.Player(playerContainerId, {
-        height: "100%",
-        width: "100%",
-        host: "https://www.youtube-nocookie.com",
-        ...config,
-        events: {
-          onReady: () => {
-            if (cancelled) return;
-            setPlayerReady(true);
-          },
-        },
-      });
-
-      playerRef.current = player as YTPlayer;
+      playerRef.current = new win.YT.Player(playerContainerId, options);
     };
 
     mount();

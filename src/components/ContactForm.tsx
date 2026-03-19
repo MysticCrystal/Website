@@ -2,25 +2,97 @@
 
 import { useState } from "react";
 
+type FieldName = "firstName" | "lastName" | "email" | "intent";
+
+type FieldErrors = Partial<Record<FieldName, string>>;
+
+const requiredFields: FieldName[] = ["firstName", "lastName", "email", "intent"];
+
 export default function ContactForm() {
   const [status, setStatus] = useState<string>("");
+  const [errors, setErrors] = useState<FieldErrors>({});
+
+  const validateField = (name: FieldName, value: string) => {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return "Required";
+    }
+
+    if (name === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedValue)) {
+      return "Enter a valid email";
+    }
+
+    return "";
+  };
+
+  const getInputClassName = (name: FieldName) =>
+    `bg-transparent border-b py-3 focus:outline-none transition-colors text-brand-dark font-light ${
+      errors[name]
+        ? "border-red-600 text-red-700 placeholder:text-red-400 focus:border-red-600"
+        : "border-brand-muted/50 focus:border-brand-dark"
+    }`;
+
+  const handleFieldBlur = (
+    event: React.FocusEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = event.currentTarget;
+    if (!requiredFields.includes(name as FieldName)) return;
+
+    const error = validateField(name as FieldName, value);
+    setErrors((currentErrors) => ({
+      ...currentErrors,
+      [name]: error || undefined,
+    }));
+  };
+
+  const handleFieldChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = event.currentTarget;
+    if (!requiredFields.includes(name as FieldName)) return;
+
+    setErrors((currentErrors) => {
+      if (!currentErrors[name as FieldName]) return currentErrors;
+
+      return {
+        ...currentErrors,
+        [name]: validateField(name as FieldName, value) || undefined,
+      };
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setStatus("sending...");
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    try {
-      const payload = {
-        firstName: String(formData.get("firstName") ?? ""),
-        lastName: String(formData.get("lastName") ?? ""),
-        email: String(formData.get("email") ?? ""),
-        phone: String(formData.get("phone") ?? ""),
-        intent: String(formData.get("intent") ?? ""),
-        message: String(formData.get("message") ?? ""),
-      };
+    const payload = {
+      firstName: String(formData.get("firstName") ?? ""),
+      lastName: String(formData.get("lastName") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      phone: String(formData.get("phone") ?? ""),
+      intent: String(formData.get("intent") ?? ""),
+      message: String(formData.get("message") ?? ""),
+    };
 
+    const nextErrors: FieldErrors = {};
+    for (const field of requiredFields) {
+      const error = validateField(field, payload[field]);
+      if (error) {
+        nextErrors[field] = error;
+      }
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      setStatus("");
+      return;
+    }
+
+    setStatus("sending...");
+
+    try {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -31,6 +103,7 @@ export default function ContactForm() {
 
       if (response.ok && data?.success) {
         setStatus("success");
+        setErrors({});
         form.reset();
       } else {
         console.log("Error", data);
@@ -52,46 +125,58 @@ export default function ContactForm() {
           Whether you&apos;re considering buying, selling, or simply want to understand the market, I&apos;d be happy to talk through your situation and help you plan the next step.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6 text-left">
+        <form onSubmit={handleSubmit} noValidate className="space-y-6 text-left">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col">
               <label htmlFor="firstName" className="text-xs font-sans uppercase tracking-[0.1em] text-brand-dark mb-2">
-                First Name
+                First Name*
               </label>
               <input
                 type="text"
                 id="firstName"
                 name="firstName"
                 required
-                className="bg-transparent border-b border-brand-muted/50 py-3 focus:outline-none focus:border-brand-dark transition-colors text-brand-dark font-light"
+                aria-invalid={Boolean(errors.firstName)}
+                onBlur={handleFieldBlur}
+                onChange={handleFieldChange}
+                className={getInputClassName("firstName")}
               />
+              {errors.firstName && <p className="mt-2 text-sm text-red-600">{errors.firstName}</p>}
             </div>
             <div className="flex flex-col">
               <label htmlFor="lastName" className="text-xs font-sans uppercase tracking-[0.1em] text-brand-dark mb-2">
-                Last Name
+                Last Name*
               </label>
               <input
                 type="text"
                 id="lastName"
                 name="lastName"
                 required
-                className="bg-transparent border-b border-brand-muted/50 py-3 focus:outline-none focus:border-brand-dark transition-colors text-brand-dark font-light"
+                aria-invalid={Boolean(errors.lastName)}
+                onBlur={handleFieldBlur}
+                onChange={handleFieldChange}
+                className={getInputClassName("lastName")}
               />
+              {errors.lastName && <p className="mt-2 text-sm text-red-600">{errors.lastName}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col">
               <label htmlFor="email" className="text-xs font-sans uppercase tracking-[0.1em] text-brand-dark mb-2">
-                Email
+                Email*
               </label>
               <input
                 type="email"
                 id="email"
                 name="email"
                 required
-                className="bg-transparent border-b border-brand-muted/50 py-3 focus:outline-none focus:border-brand-dark transition-colors text-brand-dark font-light"
+                aria-invalid={Boolean(errors.email)}
+                onBlur={handleFieldBlur}
+                onChange={handleFieldChange}
+                className={getInputClassName("email")}
               />
+              {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
             </div>
           </div>
 
@@ -116,7 +201,10 @@ export default function ContactForm() {
                 name="intent"
                 required
                 defaultValue=""
-                className="bg-transparent border-b border-brand-muted/50 py-3 focus:outline-none focus:border-brand-dark transition-colors text-brand-dark font-light appearance-none rounded-none cursor-pointer"
+                aria-invalid={Boolean(errors.intent)}
+                onBlur={handleFieldBlur}
+                onChange={handleFieldChange}
+                className={`${getInputClassName("intent")} appearance-none rounded-none cursor-pointer`}
               >
                 <option value="" disabled>
                   Select One
@@ -126,6 +214,7 @@ export default function ContactForm() {
                 <option value="Both">Buy and Sell</option>
                 <option value="Inquire">Just Browsing/Inquiry</option>
               </select>
+              {errors.intent && <p className="mt-2 text-sm text-red-600">{errors.intent}</p>}
             </div>
           </div>
 
